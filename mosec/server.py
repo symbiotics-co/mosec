@@ -30,6 +30,7 @@ Multiprocessing
     :py:meth:`append_worker(num) <Server.append_worker>`.
 """
 
+from argparse import Namespace
 import json
 import multiprocessing as mp
 import pathlib
@@ -42,9 +43,9 @@ from multiprocessing.synchronize import Event
 from time import sleep
 from typing import Dict, List, Type, Union
 
-from mosec.args import parse_arguments
+from mosec.args import DEFAULT_CONFIG, get_log_level, parse_arguments
 from mosec.dry_run import DryRunner
-from mosec.log import get_internal_logger
+from mosec.log import get_internal_logger, set_logger
 from mosec.runtime import PyRuntimeManager, RsRuntimeManager, Runtime
 from mosec.utils import ParseTarget
 from mosec.worker import MOSEC_REF_TEMPLATE, SSEWorker, Worker
@@ -64,11 +65,22 @@ class Server:
     """
 
     # pylint: disable=too-many-instance-attributes
-    def __init__(self):
+    def __init__(self, as_module: bool = False, config: dict = {}):
         """Initialize a MOSEC Server."""
         self._shutdown: Event = mp.get_context("spawn").Event()
         self._shutdown_notify: Event = mp.get_context("spawn").Event()
-        self._configs: dict = vars(parse_arguments())
+
+        if as_module:
+            default_config: dict = DEFAULT_CONFIG
+            if config:
+                for key, value in config.items():
+                    if default_config.get(key):
+                        default_config.update({key: value})
+            self._configs: dict = vars(parse_arguments(Namespace(**default_config)))
+        else:
+            self._configs: dict = vars(parse_arguments())
+
+        set_logger(get_log_level(self._configs["log_level"]))
 
         self._py_runtime_manager: PyRuntimeManager = PyRuntimeManager(
             self._configs["path"], self._shutdown, self._shutdown_notify

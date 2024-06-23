@@ -180,7 +180,3 @@ def get_internal_logger():
 def set_logger(level=logging.INFO):
     """Set the environment variable so all the sub-processes can inherit it."""
     os.environ[MOSEC_LOG_NAME] = str(level)
-
-
-# need to configure it here to make sure all the process can get the same one
-set_logger(get_log_level())
