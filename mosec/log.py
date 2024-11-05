@@ -19,7 +19,7 @@ from __future__ import annotations
 import json
 import logging
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, MutableMapping
 
 from mosec.args import get_log_level
@@ -42,7 +42,7 @@ class MosecFormat(logging.Formatter):
 
     def formatTime(self, record: logging.LogRecord, datefmt=None) -> str:
         """Convert to datetime with timezone."""
-        time = datetime.fromtimestamp(record.created).utcnow()
+        time = datetime.fromtimestamp(record.created).now(timezone.utc)
         return datetime.strftime(time, datefmt if datefmt else self.default_time_format)
 
 
@@ -180,7 +180,3 @@ def get_internal_logger():
 def set_logger(level=logging.INFO):
     """Set the environment variable so all the sub-processes can inherit it."""
     os.environ[MOSEC_LOG_NAME] = str(level)
-
-
-# need to configure it here to make sure all the process can get the same one
-set_logger(get_log_level())

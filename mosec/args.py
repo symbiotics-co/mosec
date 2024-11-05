@@ -32,6 +32,20 @@ import warnings
 from mosec.env import get_env_namespace
 
 DEFAULT_WAIT_MS = 10
+DEFAULT_CONFIG = {
+    "path": os.path.join(
+        tempfile.gettempdir(), f"mosec_{random.randrange(2**32):x}"
+    ),
+    "capacity":1024,
+    "timeout": 3000,
+    "wait": DEFAULT_WAIT_MS,
+    "address": "0.0.0.0",
+    "port": 8000,
+    "namespace": "mosec_service",
+    "debug": False,
+    "dry_run": False,
+    "log_level": "info",
+}
 
 
 def is_port_available(addr: str, port: int) -> bool:
@@ -137,10 +151,11 @@ def build_arguments_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def parse_arguments() -> argparse.Namespace:
+def parse_arguments(args: argparse.Namespace = None) -> argparse.Namespace:
     """Parse user configurations."""
-    parser = build_arguments_parser()
-    args, _ = parser.parse_known_args(namespace=get_env_namespace())
+    if not args:
+        parser = build_arguments_parser()
+        args, _ = parser.parse_known_args(namespace=get_env_namespace())
 
     if args.wait != DEFAULT_WAIT_MS:
         warnings.warn(
@@ -168,17 +183,12 @@ def parse_arguments() -> argparse.Namespace:
     return args
 
 
-def get_log_level() -> int:
+def get_log_level(log_level: str = "info") -> int:
     """Check if the service is running in debug mode."""
-    parser = build_arguments_parser()
-    args, _ = parser.parse_known_args(namespace=get_env_namespace())
-    if args.debug:
-        return logging.DEBUG
-
     level_map = {
         "debug": logging.DEBUG,
         "info": logging.INFO,
         "warning": logging.WARNING,
         "error": logging.ERROR,
     }
-    return level_map[args.log_level]
+    return level_map[log_level]

@@ -29,12 +29,10 @@ from multiprocessing.context import ForkContext, SpawnContext
 from os.path import join
 from typing import Union, cast
 
-import msgpack  # type: ignore
 import pytest
 
 from mosec.coordinator import PROTOCOL_TIMEOUT, Coordinator, State
-from mosec.mixin import MsgpackMixin
-from mosec.protocol import HTTPStautsCode, _recv_all
+from mosec.protocol import HTTPStatusCode, _recv_all
 from mosec.worker import Worker
 from tests.utils import imitate_controller_send
 
@@ -63,10 +61,6 @@ class CleanDirContext(ContextDecorator):
 class EchoWorkerJSON(Worker):
     def forward(self, data):
         return data
-
-
-class EchoWorkerMsgPack(MsgpackMixin, EchoWorkerJSON):
-    pass
 
 
 @pytest.fixture
@@ -192,14 +186,6 @@ def test_incorrect_socket_file(mocker, base_test_config, caplog):
             EchoWorkerJSON,
             json.loads,
         ),
-        (
-            [
-                msgpack.packb({"rid": "147982364", "data": b"im_bytes"}),
-                msgpack.packb({"rid": "147982831", "data": b"another_im_bytes"}),
-            ],
-            EchoWorkerMsgPack,
-            msgpack.unpackb,
-        ),
     ],
 )
 def test_echo_batch(base_test_config, test_data, worker, deserializer):
@@ -251,7 +237,7 @@ def test_echo_batch(base_test_config, test_data, worker, deserializer):
                 got_states.append(struct.unpack("!H", conn.recv(2))[0])
                 got_length = struct.unpack("!I", conn.recv(4))[0]
                 got_payloads.append(_recv_all(conn, got_length))
-            assert got_flag == HTTPStautsCode.OK
+            assert got_flag == HTTPStatusCode.OK
             assert got_ids == sent_ids
             assert got_states == [State.INGRESS | State.EGRESS] * len(sent_ids)
             assert all(
