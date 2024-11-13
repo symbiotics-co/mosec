@@ -41,7 +41,7 @@ import traceback
 from collections import defaultdict
 from multiprocessing.synchronize import Event
 from time import sleep
-from typing import Dict, List, Type, Union
+from typing import Dict, List, Optional, Type, Union
 
 from mosec.args import DEFAULT_CONFIG, get_log_level, parse_arguments
 from mosec.dry_run import DryRunner
@@ -65,7 +65,7 @@ class Server:
     """
 
     # pylint: disable=too-many-instance-attributes
-    def __init__(self, as_module: bool = False, config: dict = {}):
+    def __init__(self, as_module: bool = False, config: Optional[dict]= None):
         """Initialize a MOSEC Server."""
         self._shutdown: Event = mp.get_context("spawn").Event()
         self._shutdown_notify: Event = mp.get_context("spawn").Event()
